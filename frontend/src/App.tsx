@@ -1,5 +1,5 @@
 import {useQuery, gql, useSubscription} from '@apollo/client';
-import {ReactElement, useEffect, useState} from "react";
+import {ReactElement, useEffect, useRef, useState} from "react";
 import {client} from "./index";
 
 export default function App() {
@@ -28,17 +28,8 @@ const TRANSFERS_SUBSCRIPTION = gql`
     }
 `;
 
-type TransferQueryResponse = {
-  readonly id: string;
-  readonly date: Date;
-  readonly fromAddress: string;
-  readonly toAddress: string;
-  readonly denom: string;
-  readonly quantity: string;
-};
-
 function Transfers(): ReactElement {
-  const [transfers, setTransfers] = useState<TransferQueryResponse[]>([]);
+  const [transfers, setTransfers] = useState<TransferProps[]>([]);
   const { loading, error } = useSubscription(TRANSFERS_SUBSCRIPTION, {
     onSubscriptionData: async ({subscriptionData}) => {
       const id = subscriptionData.data.transfers.id;
@@ -65,6 +56,7 @@ function Transfers(): ReactElement {
 }
 
 type TransferProps = {
+  readonly id: string;
   readonly date: Date;
   readonly fromAddress: string;
   readonly toAddress: string;
@@ -72,11 +64,15 @@ type TransferProps = {
   readonly quantity: string;
 };
 
-function Transfer({ fromAddress, toAddress, denom, quantity, date }: TransferProps): ReactElement {
+function Transfer({ fromAddress, toAddress, denom, quantity, date, id }: TransferProps): ReactElement {
+  const notified = useRef<string[]>([]);
   let action: string;
   if (toAddress === 'cosmos19vf5mfr40awvkefw69nl6p3mmlsnacmm28xyqh') {
     action = '✅ Transfer to Leap Wallet - creating notification...';
-    new Notification(`Received ${quantity} ${denom} from ${fromAddress}.`);
+    if (!notified.current.includes(id)) {
+      notified.current.push(id);
+      new Notification(`Received ${quantity} ${denom} from ${fromAddress}.`);
+    }
   }
   else action = '❌ Transfer not to Leap Wallet - skipping notification';
   return (
