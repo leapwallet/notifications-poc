@@ -1,0 +1,41 @@
+specVersion: 1.0.0
+name: cosmoshub-subql-starter
+version: 0.0.1
+runner:
+  node:
+    name: '@subql/node-cosmos'
+    version: '>=0.1.0'
+  query:
+    name: '@subql/query'
+    version: '*'
+description: Notifications POC
+repository: 'https://github.com/subquery/juno-subql-starter'
+schema:
+  file: ./schema.graphql
+network:
+  chainId: cosmoshub-4
+  endpoint: 'https://rpc.cosmos.network'
+  dictionary: 'https://api.subquery.network/sq/subquery/cosmos-hub-dictionary'
+  chainTypes:
+    cosmos.slashing.v1beta1:
+      file: ./proto/cosmos/slashing/v1beta1/tx.proto
+      messages:
+        - MsgUnjail
+    cosmos.gov.v1beta1:
+      file: ./proto/cosmos/gov/v1beta1/tx.proto
+      messages:
+        - MsgVoteWeighted
+    cosmos.gov.v1beta1.gov:
+      file: ./proto/cosmos/gov/v1beta1/gov.proto
+      messages:
+        - WeightedVoteOption
+dataSources:
+  - kind: cosmos/Runtime
+    startBlock: 11540710
+    mapping:
+      file: ./dist/index.js
+      handlers:
+        - handler: handleTransfer
+          kind: cosmos/MessageHandler
+          filter:
+            type: "/cosmos.bank.v1beta1.MsgSend"
